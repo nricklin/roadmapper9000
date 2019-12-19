@@ -10,4 +10,4 @@ def handler(event, context):
 		print str(e)
 		return str(e)
 
-	return "looks like something worked!"
+	return "{\"msg\":\"looks like something worked!\"}"

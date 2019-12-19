@@ -9,3 +9,5 @@ def handler(event, context):
 	except Exception as e:
 		print str(e)
 		return str(e)
+
+	return "looks like something worked!"

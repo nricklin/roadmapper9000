@@ -42,6 +42,7 @@ def run():
 		# update team affinity name to contain train item:
 		for t in team_tasks:
 			t['Team Affinity'] = train + ': ' + t['Team Affinity']
+			t['Train'] = train
 
 		# sort tasks according to priority
 		team_tasks = sorted(team_tasks, key=lambda k: k['Priority']) 
@@ -75,6 +76,9 @@ def run():
 	df['Points'] = [t['Size (points)'] for t in all_sorted_team_tasks]
 	df['Priority'] = [t['Priority'] for t in all_sorted_team_tasks]
 	df['Dollars'] = [t['Dollars'] for t in all_sorted_team_tasks]
+	df['MoSCoW'] = [t['MoSCoW'] for t in all_sorted_team_tasks]
+	df['PM Priority'] = [t['PM Priority'] for t in all_sorted_team_tasks]
+	df['Train'] = [t['Train'] for t in all_sorted_team_tasks]
 	output1 = sh.worksheet_by_title(OUTPUT_SHEET_NAME)
 	output1.set_dataframe(df,(1,1))
 

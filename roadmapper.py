@@ -10,6 +10,7 @@ WORKBOOK_NAME = 'GCS Roadmap Stuff'
 TEAMS_SHEET = 'Teams'
 WORK_SHEET = 'Work'
 OUTPUT_SHEET_NAME = 'Output-team-tasks'
+MILESTONE_SHIFT = 42 # set milestone date this many days after last task is complete
 
 def run():
 	
@@ -51,7 +52,7 @@ def run():
 		if capacity == 0:
 			#  better idea, put these tasks into the orphans table.
 			new_orphans = [teamname+':---- '+t['Work Item']for t in team_tasks]
-			orphans.extend(new_orphans)
+			orphans.extend(team_tasks)
 			continue
 
 		# for each team task, add startdate and enddate
@@ -64,6 +65,7 @@ def run():
 			day_shift = math.ceil(points/points_per_day)
 			day = day.shift(days=+day_shift)
 			task['end_date'] = day
+			task['Quarter'] = str(day.year) + ' Q' + str((day.month-1)//3+1)
 
 		all_sorted_team_tasks.extend( team_tasks )
 
@@ -79,15 +81,54 @@ def run():
 	df['MoSCoW'] = [t['MoSCoW'] for t in all_sorted_team_tasks]
 	df['PM Priority'] = [t['PM Priority'] for t in all_sorted_team_tasks]
 	df['Train'] = [t['Train'] for t in all_sorted_team_tasks]
+	df['Quarter'] = [t['Quarter'] for t in all_sorted_team_tasks]
 	output1 = sh.worksheet_by_title(OUTPUT_SHEET_NAME)
 	output1.set_dataframe(df,(1,1))
 
 
 	# make the orphans table
 	df = pd.DataFrame()
-	df['Tasks'] = orphans
+	df['Tasks'] = [t['Product']+': '+t['Work Item'] for t in orphans]
+	df['Team'] = [t['Team Affinity'] for t in orphans]
+	df['Train'] = [t['Train'] for t in orphans]
+	df['Product'] = [t['Product'] for t in orphans]
+	df['Points'] = [t['Size (points)'] for t in orphans]
+	df['Dollars'] = [t['Dollars'] for t in orphans]
+	df['Priority'] = [t['Priority'] for t in orphans]
+	df['PM Priority'] = [t['PM Priority'] for t in orphans]
+	df['MoSCoW'] = [t['MoSCoW'] for t in orphans]
 	output2 = sh.worksheet_by_title('Orphans')
 	output2.set_dataframe(df,(1,1))
+
+	# make the milestones output table
+	all_orphaned_milestones = set([t['Milestone'] for t in orphans if t['Milestone'] != ''])
+	all_milestones = list(set([t['Milestone'] for t in all_sorted_team_tasks if t['Milestone'] != '']).union(all_orphaned_milestones) )
+	df = pd.DataFrame()
+	df['Milestone'] = [m+ '\n\n' for m in all_milestones]
+
+	# determine milestone dates
+	dates = []
+	for m in all_milestones:
+		if m in all_orphaned_milestones:
+			date = 'orphaned'
+		else:
+			date = max([t['end_date'] for t in all_sorted_team_tasks if t['Milestone'] == m]).shift(days=+MILESTONE_SHIFT)
+		dates.append(date)
+
+	dates_for_display = []
+	quarters_for_display = []
+	for d in dates:
+		if d == 'orphaned':
+			dates_for_display.append(d)
+			quarters_for_display.append(d)
+		else:
+			dates_for_display.append(d.format('MM/DD/YY'))
+			quarters_for_display.append(str(d.year) + ' Q' + str((d.month-1)//3+1))
+	df['Date'] = dates_for_display
+	df['Quarter'] = quarters_for_display
+	output3 = sh.worksheet_by_title('Output-milestones')
+	output3.set_dataframe(df,(1,1))
+
 
 if __name__ == "__main__":
 	run()

@@ -108,12 +108,15 @@ def run():
 
 	# determine milestone dates
 	dates = []
+	milestone_products = []
 	for m in all_milestones:
 		if m in all_orphaned_milestones:
 			date = 'orphaned'
 		else:
 			date = max([t['end_date'] for t in all_sorted_team_tasks if t['Milestone'] == m]).shift(days=+MILESTONE_SHIFT)
 		dates.append(date)
+		products = '; '.join(list(set([t['Product'] for t in all_sorted_team_tasks if t['Milestone'] == m])))
+		milestone_products.append(products)
 
 	dates_for_display = []
 	quarters_for_display = []
@@ -126,6 +129,7 @@ def run():
 			quarters_for_display.append(str(d.year) + ' Q' + str((d.month-1)//3+1))
 	df['Date'] = dates_for_display
 	df['Quarter'] = quarters_for_display
+	df['Product'] = milestone_products
 	output3 = sh.worksheet_by_title('Output-milestones')
 	output3.set_dataframe(df,(1,1))
 

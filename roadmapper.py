@@ -82,6 +82,7 @@ def run():
 	df['PM Priority'] = [t['PM Priority'] for t in all_sorted_team_tasks]
 	df['Train'] = [t['Train'] for t in all_sorted_team_tasks]
 	df['Quarter'] = [t['Quarter'] for t in all_sorted_team_tasks]
+	df['Milestone'] = [t['Milestone'] for t in all_sorted_team_tasks]
 	output1 = sh.worksheet_by_title(OUTPUT_SHEET_NAME)
 	output1.set_dataframe(df,(1,1))
 
